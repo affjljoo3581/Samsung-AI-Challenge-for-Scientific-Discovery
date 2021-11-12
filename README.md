@@ -211,3 +211,6 @@ This repository provides some useful utility scripts.
 * `download_pubchem.py` and `download_pubchemqc.py`: Download PubChem3D and PubChemQC datasets.
 * `find_test_compound_cids.py`: Find CIDs of the compounds in test dataset to prevent from training the compounds. It may occur data-leakage. 
 * `simple_ensemble.py`: It performs simple ensemble by averaging all predictions from various models.
+
+## License
+This repository is released under the Apache License 2.0. License can be found in [LICENSE](LICENSE) file.
