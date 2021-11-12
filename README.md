@@ -22,13 +22,14 @@ Before running this project, you need to install the below libraries:
 * scikit_learn
 
 This project supports [NVIDIA Apex](https://github.com/NVIDIA/apex). It will be automatically detected and used to accelerate training when installed. apex reduces the training time up to **50%**.
+
 [setup.sh](/setup.sh) helps installing necessary libraries, including apex. It installs the requirements and apex at once. You can simply run the script as follows:
 ```shell
 $ bash setup.sh
 ```
 
 ## About Molecular Transformer
-There are many apporaches to predict the molecular properties. However, for the case of calculating excitation energy gaps (e.g. between S1 to T1 states), it is necessary to consider the entire 3D structure and the charge of atoms in the compound. But many transformer-based molecular models use SMILES (or InChI) format. We also tried text-based methods in the competition, but the graph-based models showed better performances.
+There are many apporaches to predict the molecular properties. However, for the case of calculating excitation energy gaps (e.g. between S1 to T1 states), it is necessary to consider the entire 3D structure and the charge of atoms in the compound. But many transformer-based molecular models use SMILES (or InChI) format. We also tried text-based methods in the competition, but the graph-based models showed better performance.
 
 The important thing is to consider all connections between the atoms in the compound. However, the atoms are placed in 3D coordinate system, and it is almost impossible to feed 3D positional informations to the model (and adding 3d positional embeddings was worse than the baseline). So we designed new attention method, inspired by disentangled attention in DeBERTa.
 
@@ -36,41 +37,41 @@ The important thing is to consider all connections between the atoms in the comp
     <img src="images/input-embeddings.png">
 </p>
 
-First of all, the type of atoms and their charges will be embedded to the vectors and summed. Note that the positional embeddings will not be used in this model. Because the attention layer will calculate the attention scores relatively. And thanks to the absence of the positional embeddings, there is no limit of the number of atoms.
+First of all, the type of atoms and their charges will be embedded to the vectors and summed. Note that the positional embeddings will not be used to the input because attention layers will calculate the attention scores relatively. And thanks to the absence of the positional embeddings, there is no limit to the number of atoms.
 
 <p align="center">
     <img src="images/disentangled-attention.png">
 </p>
 
-After that, the hidden representations will be attended by relative attention layers. Similar to the disentangled attention introduced in DeBERTa, our relative attention performs not only from contents to contents, but also between relative informations and contents. The relative informations include relative distances and the type of bonds between the atoms.
+The hidden representations will be attended by the attention layers. Similar to the disentangled attention introduced in DeBERTa, our relative attention is performed not only for contents, but also between relative informations and the contents. The relative informations include relative distances and the type of bonds between the atoms.
 
 <p align="center">
     <img src="images/position-embedding.png">
 </p>
 
-The relative information R is calculated as above. The euclidean distances are encoded through sinusoidal encoding, with modified basis (from 10000 to 100). The bond type embeddings can be represented as below:
+The relative information **R** is calculated as above. The euclidean distances are encoded through sinusoidal encoding, with modified period (from 10000 to 100). The bond type embeddings can be described as below:
 
 <p align="center">
     <img src="images/bond-type-embedding.png">
 </p>
 
-The important thing is that **disconnections (i.e. there is no bond between two certain atoms) should be embedded as index 0, rather than excluded from attending**. Also the [CLS] tokens are separated from other normal bond-type embeddings in the relative attention.
+The important thing is **disconnections (i.e. there is no bond between two certain atoms) should be embedded as index 0, rather than excluded from attention**. Also [CLS] tokens are separated from other normal bond-type embeddings on relative attention.
 
-According to the above architecture, the model successfully attends to the relations between the atoms. And similar to the other transformer-based models, it also shows that pretraining from large-scale compound dataset achieves better performance, even with few samples for finetuning. We pretrained our model with PubChem3D (50M) and PubChemQC (3M). For PubChem3D, the model was trained to predict conformer-RMSD, MMFF94 energy, shape self-overlap, and feature self-overlap. For PubChemQC, the model was trained to predict the singlet excitation energies from S1 to S10 states.
+According to the above architecture, the model successfully focuses on the relations of the atoms. And similar to the other transformer-based models, it also shows that pretraining from large-scale dataset achieves better performance, even with few finetuning samples. We pretrained our model with PubChem3D (50M) and PubChemQC (3M). For PubChem3D, the model was trained to predict conformer-RMSD, MMFF94 energy, shape self-overlap, and feature self-overlap. For PubChemQC, the model was trained to predict the singlet excitation energies from S1 to S10 states.
 
 ## Reproduction
 
-To reproduce our results on the competition or pretrain the model, you should follow the below steps. You may need really large disk and high-performance GPUs (e.g. A100s).
+To reproduce our results on the competition or pretrain a new model, you should follow the below steps. A large disk and high-performance GPUs (e.g. A100s) will be required.
 
 ### Download PubChem3D and PubChemQC
-First of all, let's download PubChem3D and PubChemQC datasets. The following commands will download the datasets and format to the specific structure.
+First of all, let's download PubChem3D and PubChemQC datasets. The following commands will download the datasets and format to the specific dataset structure.
 
 ```bash
 $ python utilities/download_pubchem.py
 $ python utilities/download_pubchemqc.py
 ```
 
-Although we used 50M PubChem3D compounds, you can use full 100M samples if your network status and download client are available while downloading.
+Although we used 50M PubChem3D compounds, you can use full 100M samples if your network status and the client are available while downloading.
 
 After downloading all datasets, we have to create index files which indicate the seeking position of each sample. Because the dataset size is really large, it is impossible to load the entire data to the memory. So our dataset will access the data randomly using this index files.
 
@@ -83,14 +84,14 @@ Check if `pubchem-compound-50m.index` and `pubchemqc-excitations-3m.index` are c
 
 ### Training and Finetuning
 
-Now we are ready to train MoT. Using the downloaded datasets, we are going to pretrain the model. Move the datasets to `pretrain` directory and also change the working directory to `pretrain`. And type the below commands to pretrain for PubChem3D and PubChemQC datasets respectively. Note that PubChemQC-pretraining will use the PubChem3D-pretrained weights.
+Now we are ready to train MoT. Using the datasets, we are going to pretrain new model. Move the datasets to `pretrain` directory and also change the working directory to `pretrain`. And type the below commands to pretrain for PubChem3D and PubChemQC datasets respectively. Note that PubChemQC-pretraining will use PubChem3D-pretrained model weights.
 
 ```bash
 $ python src/train.py config/mot-base-pubchem.yaml
 $ python src/train.py config/mot-base-pubchemqc.yaml
 ```
 
-Check if `mot-base-pubchem.pth` and `mot-base-pubchemqc.pth` are created. Next, move the final output weights `mot-base-pubchemqc.pth` file to `finetune` directory. Prepare the competition dataset `samsung-ai-challenge-for-scientific-discovery` to the same directory and start finetuning by using below command:
+Check if `mot-base-pubchem.pth` and `mot-base-pubchemqc.pth` are created. Next, move the final output weights file (`mot-base-pubchemqc.pth`) to `finetune` directory. Prepare the competition dataset `samsung-ai-challenge-for-scientific-discovery` to the same directory and start finetuning by using below command:
 
 ```bash
 $ python src/train.py config/train/mot-base-pubchemqc.yaml  \
@@ -98,16 +99,16 @@ $ python src/train.py config/train/mot-base-pubchemqc.yaml  \
         model.random_seed=[random seed]
 ```
 
-We recommend to train the model for 5 folds and various random seeds. As you know, it is well known that the random seed is critial to the transformer finetuning. You can tune the random seed to achieve best result.
+We recommend to train the model for 5 folds with various random seeds. It is well known that the random seed is critial to transformer finetuning. You can tune the random seed to achieve better results.
 
-After finetuning the models, use following codes to predict the energy gaps from test dataset.
+After finetuning the models, use following codes to predict the energy gaps through test dataset.
 
 ```bash
 $ python src/predict.py config/predict/mot-base-pubchemqc.yaml \
         model.pretrained_model_path=[finetuned model path]
 ```
 
-And you can see the prediction file of which name is same as the model name. You can submit the single predictions or average them to get the result of ensemble.
+And you can see the prediction file of which name is same as the model name. You can submit the single predictions or average them to get ensembled result.
 
 ```bash
 $ python utilities/simple_ensemble.py finetune/*.csv [output file name]
@@ -115,7 +116,7 @@ $ python utilities/simple_ensemble.py finetune/*.csv [output file name]
 
 ### Finetune with custom dataset
 
-If you want to finetune with custom dataset, all you need to do is to rewrite the configuration file. Note that `finetune` directory is considered only for the competition dataset. So the entire training codes are focused on the competition data structure. However, you can finetune your dataset on `pretrain` directory, instead. Let's check the configuration file for the PubChemQC dataset which is placed on `pretrain/config/mot-base-pubchemqc.yaml`.
+If you want to finetune with custom dataset, all you need to do is to rewrite the configuration file. Note that `finetune` directory is considered only for the competition dataset. So the entire training codes are focused on the competition data structure. Instead, you can finetune the model with your custom dataset on `pretrain` directory. Let's check the configuration file for PubChemQC dataset which is placed at `pretrain/config/mot-base-pubchemqc.yaml`.
 
 ```yaml
 data:
@@ -145,7 +146,7 @@ model:
   config: ...
 ```
 
-In the configuration file, you can see `data.dataset_file` property. It can be changed to the desired finetuning dataset with its index file. Do not forget to create the index file by using `utilities/create_dataset_index.py`. And you can specify the column name which contains the encoded 3D structures. `data.label_columns` indicates which columns will be used to predict. The values will be normalized by `data.labels_mean_std`. Simply copy this file and rename to your own dataset. Change the name and statistics of each label. There is an example for predicting toxicity values:
+In the configuration file, you can see `data.dataset_file` field. It can be changed to the desired finetuning dataset with its index file. Do not forget to create the index file by `utilities/create_dataset_index.py`. And you can specify the column name which contains the encoded 3D structures. `data.label_columns` indicates which columns will be used to predict. The values will be normalized by `data.labels_mean_std`. Simply copy this file and rename to your own dataset. Change the name and statistics of each label. Here is an example for predicting toxicity values:
 
 ```yaml
 data:
