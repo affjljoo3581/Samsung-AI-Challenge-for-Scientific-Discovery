@@ -2,7 +2,7 @@
 **Large-scale Pretraining for Molecular Property Prediction**
 
 ## Samsung AI Challenge for Scientific Discovery
-This repository is an official implementation of a model which won first place in the [Samsung AI Challenge for Scientific Discovery](https://dacon.io/competitions/official/235789/overview/description) competition and was introduced at [SAIF 2021](https://www.sait.samsung.co.kr/saithome/event/saif2021.do).
+This repository is an official implementation of a model which won first place in the [Samsung AI Challenge for Scientific Discovery](https://dacon.io/competitions/official/235789/overview/description) competition and was introduced at [SAIF 2021](https://www.sait.samsung.co.kr/saithome/event/saif2021.do). The result of the challenge was announced at [this video](https://www.youtube.com/watch?v=YRbFDThaAmo#t=2h57m17s).
 
 ## Introduction
 MoT is a transformer-based model for predicting molecular properties from its 3D molecular structure. It was first introduced to calculate the excitation energy gap between S1 and T1 states by the molecular structure.
