@@ -1,0 +1,49 @@
+data:
+  dataset_file:
+    label: pubchemqc-excitations-3m.csv
+    index: pubchemqc-excitations-3m.index
+  input_column: structure
+  label_columns: [s1_energy, s2_energy, s3_energy, s4_energy, s5_energy, s6_energy, s7_energy, s8_energy, s9_energy, s10_energy]
+  labels_mean_std:
+    s1_energy: [4.56093558, 0.8947327]
+    s2_energy: [4.94014921, 0.8289951]
+    s3_energy: [5.19785427, 0.78805644]
+    s4_energy: [5.39875606, 0.75659831]
+    s5_energy: [5.5709758, 0.73529373]
+    s6_energy: [5.71340364, 0.71889017]
+    s7_energy: [5.83764871, 0.70644563]
+    s8_energy: [5.94665475, 0.6976438]
+    s9_energy: [6.04571037, 0.69118142]
+    s10_energy: [6.13691953, 0.68664366]
+  max_length: 128
+  bond_drop_prob: 0.1
+  validation_ratio: 0.05
+  dataloader_workers: -1
+
+model:
+  pretrained_model_path: mot-base-pubchem.pth
+  config:
+    num_layers: 12
+    hidden_dim: 768
+    intermediate_dim: 3072
+    num_attention_heads: 12
+    hidden_dropout_prob: 0.1
+    attention_dropout_prob: 0.1
+    position_scale: 100.0
+    initialize_range: 0.02
+
+train:
+  name: mot-base-pubchemqc
+  optimizer:
+    lr: 1e-4
+    betas: [0.9, 0.999]
+    eps: 1e-6
+    weight_decay: 0.01
+  training_steps: 300000
+  warmup_steps: 10000
+  batch_size: 512
+  accumulate_grads: 4
+  max_grad_norm: 1.0
+  validation_interval: 1.0
+  precision: 16
+  gpus: 1

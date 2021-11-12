@@ -1,0 +1,40 @@
+data:
+  dataset_files:
+  - label: samsung-ai-challenge-for-scientific-discovery/train.csv
+    structures: samsung-ai-challenge-for-scientific-discovery/train_sdf
+  - label: samsung-ai-challenge-for-scientific-discovery/dev.csv
+    structures: samsung-ai-challenge-for-scientific-discovery/dev_sdf
+  max_length: 160
+  bond_drop_prob: 0.1
+  num_folds: 5
+  fold_index: 0
+  dataloader_workers: -1
+
+model:
+  random_seed: 42
+  pretrained_model_path: mot-base-pubchemqc.pth
+  config:
+    num_layers: 12
+    hidden_dim: 768
+    intermediate_dim: 3072
+    num_attention_heads: 12
+    hidden_dropout_prob: 0.1
+    attention_dropout_prob: 0.1
+    position_scale: 100.0
+    initialize_range: 0.02
+
+train:
+  name: mot-base-pubchemqc-ssd
+  optimizer:
+    lr: 1e-5
+    betas: [0.9, 0.999]
+    eps: 1e-6
+    weight_decay: 0.01
+  epochs: 20
+  warmup_ratio: 0.1
+  batch_size: 16
+  accumulate_grads: 1
+  max_grad_norm: 1.0
+  validation_interval: 0.2
+  precision: 16
+  gpus: 1

@@ -1,0 +1,21 @@
+data:
+  dataset_files:
+  - labels: samsung-ai-challenge-for-scientific-discovery/test.csv
+    structures: samsung-ai-challenge-for-scientific-discovery/test_sdf
+  max_length: 1024
+  dataloader_workers: -1
+
+model:
+  pretrained_model_path: mot-base-pubchemqc-ssd-fold0.pth
+  config:
+    num_layers: 12
+    hidden_dim: 768
+    intermediate_dim: 3072
+    num_attention_heads: 12
+    hidden_dropout_prob: 0.1
+    attention_dropout_prob: 0.1
+    position_scale: 100.0
+    initialize_range: 0.02
+
+predict:
+  batch_size: 32

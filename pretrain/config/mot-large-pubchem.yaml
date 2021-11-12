@@ -1,0 +1,43 @@
+data:
+  dataset_file:
+    label: pubchem-compounds-50m.csv
+    index: pubchem-compounds-50m.index
+  input_column: structure
+  label_columns: [conformer_rmsd, mmff94_energy, shape_selfoverlap, feature_selfoverlap]
+  labels_mean_std:
+    conformer_rmsd: [0.87, 0.25]
+    mmff94_energy: [64.1, 33.6]
+    shape_selfoverlap: [987, 338]
+    feature_selfoverlap: [40.5, 14.5]
+  max_length: 160
+  bond_drop_prob: 0.0
+  validation_ratio: 0.05
+  dataloader_workers: -1
+
+model:
+  pretrained_model_path: null
+  config:
+    num_layers: 24
+    hidden_dim: 1024
+    intermediate_dim: 4096
+    num_attention_heads: 16
+    hidden_dropout_prob: 0.1
+    attention_dropout_prob: 0.1
+    position_scale: 100.0
+    initialize_range: 0.02
+
+train:
+  name: mot-large-pubchem
+  optimizer:
+    lr: 2e-4
+    betas: [0.9, 0.999]
+    eps: 1e-6
+    weight_decay: 0.01
+  training_steps: 150000
+  warmup_steps: 10000
+  batch_size: 128
+  accumulate_grads: 16
+  max_grad_norm: 1.0
+  validation_interval: 0.2
+  precision: 16
+  gpus: 1
